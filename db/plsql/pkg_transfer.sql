@@ -132,7 +132,9 @@ CREATE OR REPLACE PACKAGE BODY pkg_transfer AS
       SELECT txn_id INTO p_txn_id FROM txn WHERE txn_ref = p_txn_ref;
       p_result_code := 'MC-1006';
 
-    -- Lỗi không lường trước: hoàn tác rồi ném lỗi lên cho phía gọi xử lý.
+    -- Lỗi không lường trước: hoàn tác rồi ném lỗi lên.
+    -- Không gán p_result_code ở đây vì OUT param không về được khi có exception;
+    -- tầng Java bắt SQLException và trả MC-9999.
     WHEN OTHERS THEN
       ROLLBACK TO sp_internal_transfer;
       RAISE;
