@@ -70,7 +70,7 @@ Chuyển tiền giữa hai tài khoản cùng ngân hàng, hạch toán kép (t�
 
 | MC-1008 | Khác loại tiền |
 
-| MC-9999 | Lỗi hệ thống |
+| MC-9999 | Lỗi hệ thống (do tầng ứng dụng gán khi DB ném lỗi) |
 
 
 
