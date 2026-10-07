@@ -1,0 +1,52 @@
+### Chạy trong IntelliJ (HTTP Client) hoặc copy sang Postman.
+### Dữ liệu mẫu: db/migration/V2__seed_data.sql. Đổi Idempotency-Key mỗi lần chạy lại từ đầu.
+
+### Tra cứu khách hàng
+GET http://localhost:8081/v1/customers/CIF0001
+
+### Danh sách tài khoản của khách hàng
+GET http://localhost:8081/v1/customers/CIF0002/accounts
+
+### Tra cứu tài khoản (xem số dư khả dụng)
+GET http://localhost:8081/v1/accounts/1000000001
+
+### Case 1: chuyển hợp lệ -> 200, MC-0000
+POST http://localhost:8081/v1/transfers
+Content-Type: application/json
+Idempotency-Key: API-001
+
+{"fromAccount":"1000000001","toAccount":"1000000002","amount":500000,"channel":"TELLER","description":"case 1"}
+
+### Case 2: gửi lại đúng key API-001 -> 200, MC-1006, replayed=true, số dư không đổi
+POST http://localhost:8081/v1/transfers
+Content-Type: application/json
+Idempotency-Key: API-001
+
+{"fromAccount":"1000000001","toAccount":"1000000002","amount":500000,"channel":"TELLER","description":"case 1"}
+
+### Case 3: thiếu số dư -> 422, MC-1004
+POST http://localhost:8081/v1/transfers
+Content-Type: application/json
+Idempotency-Key: API-003
+
+{"fromAccount":"1000000001","toAccount":"1000000002","amount":999000000,"channel":"TELLER"}
+
+### Case 4: tài khoản đích bị phong tỏa -> 422, MC-1003
+POST http://localhost:8081/v1/transfers
+Content-Type: application/json
+Idempotency-Key: API-004
+
+{"fromAccount":"1000000001","toAccount":"1000000003","amount":100000,"channel":"TELLER"}
+
+### Case 5: nguồn trùng đích -> 422, MC-1007
+POST http://localhost:8081/v1/transfers
+Content-Type: application/json
+Idempotency-Key: API-005
+
+{"fromAccount":"1000000001","toAccount":"1000000001","amount":100000,"channel":"TELLER"}
+
+### Thêm: thiếu header Idempotency-Key -> 400, MC-1000
+POST http://localhost:8081/v1/transfers
+Content-Type: application/json
+
+{"fromAccount":"1000000001","toAccount":"1000000002","amount":100000,"channel":"TELLER"}
