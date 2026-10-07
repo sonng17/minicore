@@ -26,6 +26,7 @@ Chuyển tiền giữa hai tài khoản cùng ngân hàng, hạch toán kép (t�
 | Mã | Ý nghĩa |
 |---|---|
 | MC-0000 | Thành công |
+| MC-1000 | Dữ liệu đầu vào không hợp lệ (thiếu header, sai định dạng body) |
 | MC-1001 | Tài khoản nguồn không tồn tại |
 | MC-1002 | Tài khoản đích không tồn tại |
 | MC-1003 | Tài khoản bị phong tỏa hoặc đã đóng |
@@ -34,6 +35,8 @@ Chuyển tiền giữa hai tài khoản cùng ngân hàng, hạch toán kép (t�
 | MC-1006 | Trùng mã giao dịch |
 | MC-1007 | Tài khoản nguồn trùng tài khoản đích |
 | MC-1008 | Khác loại tiền |
+| MC-1101 | Khách hàng không tồn tại (API tra cứu) |
+| MC-1102 | Tài khoản không tồn tại (API tra cứu) |
 | MC-9999 | Lỗi hệ thống (do tầng ứng dụng gán khi DB ném lỗi) |
 
 ## Luồng xử lý
