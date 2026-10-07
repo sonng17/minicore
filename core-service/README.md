@@ -40,14 +40,31 @@ transfer/   TransferController → TransferService → TransferProcedure (interf
 
 ## Chạy
 
+Cách nhanh nhất là chạy cả hệ thống từ thư mục gốc repo: `docker compose up --build`.
+
+Khi phát triển trong IntelliJ:
+
 ```bash
-mvn test             # 9 unit test, không cần Oracle
-mvn spring-boot:run  # cổng 8081, cần Oracle đang chạy (xem README gốc)
+docker compose up -d oracle   # ở thư mục gốc repo
+mvn test                      # 9 unit test, không cần Oracle
+mvn spring-boot:run           # cổng 8081
 ```
 
 Biến môi trường (có giá trị mặc định cho máy local): `DB_URL`, `DB_USER`, `DB_PASSWORD`.
 
 Swagger UI: http://localhost:8081/swagger-ui.html. Request mẫu cho 5 case kiểm thử: `requests.http`.
+
+## Schema (Flyway)
+
+Script nằm trong `src/main/resources/db/migration`, Flyway chạy khi app khởi động:
+
+| File | Nội dung |
+|---|---|
+| `V1__init_schema.sql` | Bảng `CUSTOMER`, `ACCOUNT`, `TXN`, `JOURNAL_ENTRY` |
+| `V2__seed_data.sql` | 2 khách hàng, 3 tài khoản mẫu |
+| `R__pkg_transfer.sql` | `PKG_TRANSFER`; tiền tố `R__` (repeatable) nên mỗi khi sửa file, Flyway biên dịch lại |
+
+Không sửa file `V…` đã chạy; thay đổi schema thì thêm file `V3__…`. Flyway lưu lịch sử trong bảng `flyway_schema_history`.
 
 ## Gợi ý đọc code
 
@@ -57,4 +74,4 @@ Swagger UI: http://localhost:8081/swagger-ui.html. Request mẫu cho 5 case ki�
 
 ## Chưa làm
 
-Nộp/rút, sao kê, quản lý schema bằng Flyway trong app, integration test với Oracle thật (Testcontainers), test 200 lệnh chuyển song song.
+Nộp/rút, sao kê, integration test với Oracle thật (Testcontainers), test 200 lệnh chuyển song song.
