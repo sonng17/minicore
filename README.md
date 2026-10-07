@@ -2,7 +2,7 @@
 
 Core banking thu nhỏ và lớp tích hợp API, viết bằng Java 21 + Spring Boot 3 + Oracle.
 
-> **Trạng thái:** đang phát triển — tuần 2/8. Hiện có: đặc tả nghiệp vụ, thiết kế kiến trúc, CSDL Oracle, package PL/SQL chuyển khoản, core-service (Spring Boot) với API khách hàng, tài khoản và chuyển khoản nội bộ.
+> **Trạng thái:** đang phát triển — tuần 2/8. Hiện có: đặc tả nghiệp vụ, thiết kế kiến trúc, CSDL Oracle, package PL/SQL chuyển khoản, chạy toàn bộ bằng `docker compose up`, core-service (Spring Boot) với API khách hàng, tài khoản và chuyển khoản nội bộ.
 
 ## Mục tiêu
 
@@ -43,34 +43,41 @@ Nguyên tắc: mọi lời gọi đi qua gateway; chỉ core-service được gh
 ## Cấu trúc repo
 
 ```
-docs/spec/       Đặc tả nghiệp vụ + sequence diagram
-db/migration/    Script schema (đặt tên theo chuẩn Flyway)
-db/plsql/        Package PL/SQL
-core-service/    Spring Boot: API khách hàng, tài khoản, chuyển khoản (gọi PKG_TRANSFER)
+docs/spec/                                  Đặc tả nghiệp vụ + sequence diagram
+docs/testing/                               Ghi chép kết quả kiểm thử
+core-service/                               Spring Boot: API khách hàng, tài khoản, chuyển khoản
+core-service/src/main/resources/db/migration Schema, dữ liệu mẫu, package PL/SQL (Flyway)
+docker-compose.yml                          Chạy Oracle + core-service bằng một lệnh
 ```
 
-## Chạy CSDL local
+## Chạy toàn bộ
+
+Cần Docker Desktop. Không cần cài Java hay Maven để chạy.
 
 ```bash
-docker run -d --name minicore-oracle -p 1521:1521 \
-  -e ORACLE_PASSWORD=Oracle123 \
-  -e APP_USER=minicore -e APP_USER_PASSWORD=minicore123 \
-  gvenzl/oracle-free:23-slim-faststart
+docker compose up --build
 ```
 
-Kết nối: `localhost:1521`, service `FREEPDB1`, user `minicore`. Chạy lần lượt `db/migration/V1__init_schema.sql`, `V2__seed_data.sql`, rồi `db/plsql/pkg_transfer.sql`.
+Lần đầu mất vài phút (tải image, build). Khi core-service khởi động, Flyway tự tạo schema, nạp dữ liệu mẫu và biên dịch `PKG_TRANSFER`.
 
-## Chạy core-service
+- Swagger UI: http://localhost:8081/swagger-ui.html
+- Request mẫu cho 5 case: `core-service/requests.http`
+- Kết nối DB bằng DBeaver: `localhost:1521`, service `FREEPDB1`, user `minicore` / `minicore123`
 
-Cần JDK 21 và Maven (IntelliJ có sẵn Maven). Oracle phải đang chạy và đã có schema như trên.
+Dừng: `Ctrl+C` hoặc `docker compose stop` (giữ dữ liệu). Xóa sạch để chạy lại từ đầu: `docker compose down`.
+
+## Phát triển core-service
+
+Cần JDK 21 và Maven (IntelliJ có sẵn Maven).
 
 ```bash
+docker compose up -d oracle   # chỉ chạy Oracle
 cd core-service
-mvn test             # unit test, không cần Oracle
-mvn spring-boot:run  # chạy ở cổng 8081
+mvn test                      # 9 unit test, không cần Oracle
+mvn spring-boot:run           # cổng 8081, Flyway tự cập nhật schema
 ```
 
-Swagger UI: http://localhost:8081/swagger-ui.html · Request mẫu cho 5 case: `core-service/requests.http`. Chi tiết: [core-service/README.md](core-service/README.md).
+Chi tiết: [core-service/README.md](core-service/README.md).
 
 ## Quy ước
 
@@ -82,6 +89,7 @@ Swagger UI: http://localhost:8081/swagger-ui.html · Request mẫu cho 5 case: `
 
 - [x] Tuần 1: đặc tả, kiến trúc, schema Oracle, `PKG_TRANSFER`
 - [x] core-service: API khách hàng, tài khoản, chuyển nội bộ gọi `PKG_TRANSFER`, response và mã lỗi chuẩn, Swagger, unit test
+- [x] Flyway quản lý schema trong app, Docker Compose chạy Oracle + core-service bằng một lệnh
 - [ ] core-service: nộp/rút, sao kê, integration test với Oracle thật, test chuyển song song
 - [ ] payment-service + api-gateway (Idempotency-Key, JWT, rate limit) — mốc MVP
 - [ ] Kafka + outbox, notification-audit (MongoDB)

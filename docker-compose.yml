@@ -1,0 +1,33 @@
+# Chạy toàn bộ MiniCore: docker compose up --build
+# Mật khẩu dưới đây chỉ dùng cho máy local; có thể ghi đè bằng file .env (đã nằm trong .gitignore).
+services:
+  oracle:
+    image: gvenzl/oracle-free:23-slim-faststart
+    container_name: minicore-db
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:-Oracle123}
+      APP_USER: ${DB_USER:-minicore}
+      APP_USER_PASSWORD: ${DB_PASSWORD:-minicore123}
+    ports:
+      - "1521:1521"
+    healthcheck:
+      # Script có sẵn trong image, báo healthy khi database nhận kết nối
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  core-service:
+    build: ./core-service
+    container_name: minicore-core-service
+    environment:
+      # Trong mạng Docker, Oracle được gọi bằng tên service "oracle" thay cho localhost
+      DB_URL: jdbc:oracle:thin:@oracle:1521/FREEPDB1
+      DB_USER: ${DB_USER:-minicore}
+      DB_PASSWORD: ${DB_PASSWORD:-minicore123}
+    ports:
+      - "8081:8081"
+    depends_on:
+      oracle:
+        condition: service_healthy
